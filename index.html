@@ -10,37 +10,54 @@
 <body>
 	<div class="clock">
 		<div class="clock-face">
+			<!-- All of the hands are just stacked on top of each other, and a rotate transform will be 
+				 applied depending on the actual time -->
 			<div class="hand hour-hand"></div>
 			<div class="hand min-hand"></div>
 			<div class="hand second-hand"></div>
 		</div>
 	</div>
+
+	<!-- Might should use a stylesheet link here instead, but instead just inline the style to keep it simple -->
 	<style>
 		html {
 		  background:#018DED url(http://unsplash.it/1500/1000?image=881&blur=50);
 		  background-size:cover;
 		  font-family:'helvetica neue';
 		  text-align: center;
+		  /* Setup a baseline font size for rem units */
 		  font-size: 10px;
 		}
 	
 		body {
 		  margin: 0;
 		  font-size: 2rem;
+		  
+		  /* Use flexbox layout */
 		  display:flex;
 		  flex:1;
-		  min-height: 100vh;
 		  align-items: center;
+
+		  min-height: 100vh;
 		}
 	
 		.clock {
 		  width: 30rem;
 		  height: 30rem;
 		  border:20px solid white;
+
+		  /* This is what makes the clock round */
 		  border-radius:50%;
+
 		  margin:50px auto;
+
+		  /* Not sure this is needed, since its child element is also relative, but no hurt 
+		     in adding it */
 		  position: relative;
+
 		  padding:2rem;
+
+		  /* This box-shadowing is pretty subtle, but it adds a nice finishing touch */ 
 		  box-shadow:
 			0 0 0 4px rgba(0,0,0,0.1),
 			inset 0 0 0 3px #EFEFEF,
@@ -49,65 +66,144 @@
 		}
 	
 		.clock-face {
+		  /* 
+		   * Usage of postition: relative is important here. 
+		   *
+		   * Since in this application, .clock-face is used in an element that is parent
+		   * to the element that uses .hand, and since we want absolute positioning of
+		   * the hand element, we need to specify position: relative here, which allows
+		   * absolute positioning of the hand, relative to the clock-face.
+		   */
 		  position: relative;
+
 		  width: 100%;
 		  height: 100%;
-		  transform: translateY(-3px); /* account for the height of the clock hands */
+
+		  transform: translateY(-3px); /* Used to account for the height of the clock hands.  
+										  I personally couldn't see the difference by not
+										  using this style, but Wes saw the need, so I'll
+										  leave it in. */
 		}
 	
 		.hand {
+		  /* 
+		   * The width property sets not only the length of the hand, but also the location of
+		   * its origin relative to the parent. In other words, if this is set to 10%, it moves
+		   * the origin of the hand to the left edge of the clock, and shortens each hand. On 
+		   * the other hand, if it is changed to 90%, it moves the origin of the hand to the right
+		   * side of the clock and makes the hands much longer. The 50% value puts the origin 
+		   * in the middle.
+		   */
 		  width:50%;
+
+		  /* This is the absolute pixel width of the hand */
 		  height:6px;
 		  background:black;
+
+		  /* Move the vertical origin of the hand down into the middle of the parent */
 		  position: absolute;
 		  top:50%;
+		  
+		  /* 
+		   * The default transform-origin is 50%. If we used the default, it would cause the 
+		   * rotation of the hand to occur in the middle of the line. The value of 100% means
+		   * the rotation will be applied on the "far right" end of the hand, meaning in the 
+		   * center of the clock, since the default location of the hand (without any rotation)
+		   * is at the 45 second mark, or at angle 180 degrees from the standard trig (quadrant zero)
+		   * starting location. We are talking in terms of the x-axis here because div tags are
+		   * applied left to right (not top to bottom).
+		   */
 		  transform-origin: 100%;
+
+		  /* 
+		   * The angle specified here will be overwritten by the JS setDate()
+		   * method. The default of 90deg, moves the hand clockwise to the 12 o'clock
+		   * location, at least until the first JS setDate transform is applied.
+		   */
 		  transform: rotate(90deg);
 		  transition: all 0.05s;
+		  /* 
+		   * See http://cubic-bezier.com to create your own timing function.
+		   * This one overshoots briefly, and quickly returns back to the
+		   * destination, which in this case provides a nice effect for a 
+		   * ticking clock hand
+		   */
 		  transition-timing-function: cubic-bezier(0.1, 2.7, 0.58, 1);
 		}
 	</style>
 	
 </body>
 <script>
+	/* 
+	 * By putting the hand selectors outside of the setDate method, it improves 
+	 * performance because we don't have to perform unneeded queries each
+	 * time the function is called. So, we just do the queries one time 
+	 * only.
+	 */
 	const secondHand = document.querySelector('.second-hand');
 	const minsHand = document.querySelector('.min-hand');
 	const hourHand = document.querySelector('.hour-hand');
+
+	/*
+	 * setDate function
+	 * 
+	 */
 	function setDate() {
 		const now = new Date();
+
+		/*
+		 * Animate the seconds hand
+		 */
 		const seconds = now.getSeconds();
-		const secondsDegrees = ((seconds / 60) * 360) + 90;
+		/* 
+		 * Perform a calculation to turn seconds into a percentage (seconds/60),
+		 * multiply that percentage times 360, to turn the number into degrees,
+		 * and finally add 90 to reflect the fact we want the origin to be 
+		 * at 12 o'clock instead of at the 45 second mark as noted above. And
+		 * finally, apply the transformation dynamically to reflect the current
+		 * time on the screen. 
+		 */
+		const secondsPercentage = seconds / 60;
+		/*
+		 * This little extra conditional helps eliminate a visual glitch
+		 * When the hand crosses from (59 seconds / 60) to (0 seconds / 60)
+		 */
+		if (secondsPercentage === 0) {
+			secondHand.style.transition = null;
+		} else {
+			secondHand.style.transition = 'all 0.05s';
+		}
+		const secondsDegrees = (secondsPercentage * 360) + 90;
 		secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
 
+		/*
+		 * Animate the minute hand
+		 */
 		const mins = now.getMinutes();
-		const minsDegrees = ((mins / 60) * 360) + 90;
+		const minsPercentage = mins / 60;
+		if (minsPercentage === 0) {
+			minsHand.style.transition = null;
+		} else {
+			minsHand.style.transition = 'all 0.05s';
+		}
+		const minsDegrees = (minsPercentage * 360) + 90;
 		minsHand.style.transform = `rotate(${minsDegrees}deg)`;
 
+		/*
+		 * Animate the hours hand
+		 */
+
 		const hours = now.getHours();
-		const hoursDegrees = ((hours / 12) * 360) + 90;
+		const hoursPercentage = hours/ 12;
+		if (hoursPercentage === 0) {
+			hoursHand.style.transition = null;
+		} else {
+			hoursHand.style.transition = 'all 0.05s';
+		}
+		const hoursDegrees = (hoursPercentage * 360) + 90;
 		hourHand.style.transform = `rotate(${hoursDegrees}deg)`;
 	}
 
-//https://www.w3schools.com/graphics/canvas_clock.asp
-	// function drawNumbers(ctx, radius) {
-	//     var ang;
-	// 	var num;
-	// 	ctx.font = radius*0.15 + "px arial";
-	// 	ctx.textBaseline="middle";
-	// 	ctx.textAlign="center";
-	// 	for(num= 1; num < 13; num++){
-	// 		ang = num * Math.PI / 6;
-	// 		ctx.rotate(ang);
-	// 		ctx.translate(0, -radius*0.85);
-	// 		ctx.rotate(-ang);
-	// 		ctx.fillText(num.toString(), 0, 0);
-	// 		ctx.rotate(ang);
-	// 		ctx.translate(0, radius*0.85);
-	// 		ctx.rotate(-ang);
-	// 	}
-	// }
-
-	//drawNumbers();
 	setInterval(setDate, 1000);
 </script>
 </html>
