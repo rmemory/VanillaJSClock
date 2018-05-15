@@ -1,0 +1,120 @@
+html {
+	background:#018DED url(http://unsplash.it/1500/1000?image=881&blur=50);
+	background-size:cover;
+	font-family:'helvetica neue';
+	text-align: center;
+	/* Setup a baseline font size for rem units */
+	font-size: 10px;
+  }
+
+  body {
+	margin: 0;
+	font-size: 2rem;
+	
+	/* Use flexbox layout */
+	display:flex;
+	flex:1;
+	align-items: center;
+
+	min-height: 100vh;
+  }
+
+  .clock {
+	width: 30rem;
+	height: 30rem;
+	border:20px solid white;
+
+	/* This is what makes the clock round */
+	border-radius:50%;
+
+	/* top and bottom have 50px margin, right and left will 
+	   increase as much as necessary to center the element along
+	   the vertical or y-axis of the viewport.
+
+	   https://stackoverflow.com/questions/26230880/what-does-margin-auto-mean
+	   */
+	margin:50px auto;
+
+	/* Not sure this is needed, since its child element is also relative, but no hurt 
+	   in adding it */
+	position: relative;
+
+	padding:2rem;
+
+	/* This box-shadowing is pretty subtle, but it adds a nice finishing touch */ 
+	box-shadow:
+	  0 0 0 4px rgba(0,0,0,0.1),
+	  inset 0 0 0 3px #EFEFEF,
+	  inset 0 0 10px black,
+	  0 0 10px rgba(0,0,0,0.2);
+  }
+
+  .clock-face {
+	/* 
+	 * Usage of postition: relative is important here. 
+	 *
+	 * Since in this application, .clock-face is used in an element that is parent
+	 * to the element that uses .hand, and since we want absolute positioning of
+	 * the hand element, we need to specify position: relative here, which allows
+	 * absolute positioning of the hand, relative to the clock-face.
+	 */
+	position: relative;
+
+	width: 100%;
+	height: 100%;
+
+	transform: translateY(-3px); /* Used to account for the height of the clock hands.  
+									I personally couldn't see the difference by not
+									using this style, but Wes saw the need, so I'll
+									leave it in. */
+  }
+
+  .hand {
+	/* 
+	 * The width property sets not only the length of the hand, but also the location of
+	 * its origin relative to the parent. In other words, if this is set to 10%, it moves
+	 * the origin of the hand to the left edge of the clock, and shortens each hand. On 
+	 * the other hand, if it is changed to 90%, it moves the origin of the hand to the right
+	 * side of the clock and makes the hands much longer. The 50% value puts the origin 
+	 * in the middle.
+	 */
+	width:50%;
+
+	/* This is the absolute pixel width of the hand */
+	height:6px;
+	background:black;
+
+	/* Move the vertical origin of the hand down into the middle of the parent */
+	position: absolute;
+	top:50%;
+	
+	/* 
+	 * The default transform-origin is 50%. If we used the default, it would cause the 
+	 * rotation of the hand to occur in the middle of the line. The value of 100% means
+	 * the rotation will be applied on the "far right" end of the hand, meaning in the 
+	 * center of the clock, since the default location of the hand (without any rotation)
+	 * is at the 45 second mark, or at angle 180 degrees from the standard trig (quadrant zero)
+	 * starting location. We are talking in terms of the x-axis here because div tags are
+	 * applied left to right (not top to bottom).
+	 */
+	transform-origin: 100%;
+
+	/* 
+	 * The angle specified here will be overwritten by the JS setDate()
+	 * method. The default of 90deg, moves the hand clockwise to the 12 o'clock
+	 * location, at least until the first JS setDate transform is applied.
+	 */
+	transform: rotate(90deg);
+
+	/* Without the transition, the transform all happen immediately, no 
+	   timing function */
+	transition: all 0.05s;
+	
+	/* 
+	 * See http://cubic-bezier.com to create your own timing function.
+	 * This one overshoots briefly, and quickly returns back to the
+	 * destination, which in this case provides a nice effect for a 
+	 * ticking clock hand
+	 */
+	transition-timing-function: cubic-bezier(0.1, 2.7, 0.58, 1);
+  }

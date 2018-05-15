@@ -11,6 +11,8 @@ This project demonstrates a few things:
 * Usage of a cubic-bezier timing function. See http://cubic-bezier.com
 * Demonstration of various CSS styles to perform basic graphics, like 
   drawing round clock faces, lines for clock hands, etc.
-* Temporarily removing a CSS style (in this case transition).
+* Temporarily removing a CSS style (in this case transition) by nulling 
+  it out and then restoring it.
+* In the style.css there is also an explanation of the auto property
 
 To view this project, simply clone it, and open index.html in your browswer. No databases, routing, or any backend required.
